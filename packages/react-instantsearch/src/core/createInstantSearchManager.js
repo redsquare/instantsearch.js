@@ -29,6 +29,8 @@ export default function createInstantSearchManager({
   helper.on('result', handleSearchSuccess);
   helper.on('error', handleSearchError);
 
+  const derivedHelpers = {};
+
   let initialSearchParameters = helper.state;
 
   const widgetsManager = createWidgetsManager(onWidgetsUpdate);
@@ -53,25 +55,78 @@ export default function createInstantSearchManager({
   }
 
   function getSearchParameters() {
-    return widgetsManager.getWidgets()
+    const mainParameters = widgetsManager.getWidgets()
       .filter(widget => Boolean(widget.getSearchParameters))
+      .filter(widget => !widget.multiIndexContext || widget.multiIndexContext.targettedIndex === indexName)
       .reduce(
         (res, widget) => widget.getSearchParameters(res),
         initialSearchParameters
       );
+
+    const derivatedWidgets = widgetsManager.getWidgets()
+      .filter(widget => Boolean(widget.getSearchParameters))
+      .filter(widget => widget.multiIndexContext && widget.multiIndexContext.targettedIndex !== indexName);
+
+    const derivatedWidgetsByIndex = derivatedWidgets.reduce((indices, widget) => {
+      const targettedIndex = widget.multiIndexContext.targettedIndex;
+      const index = indices.find(i => i.targettedIndex === targettedIndex);
+      if (index) {
+        index.widgets.push(widget);
+      } else {
+        indices.push({targettedIndex, widgets: [widget]});
+      }
+      return indices;
+    }, []);
+
+    const derivatedParameters = derivatedWidgetsByIndex.map(widgets => {
+      const parameters = widgets.widgets.reduce(
+        (res, widget) =>
+          new SearchParameters({
+            ...mainParameters,
+            ...widget.getSearchParameters(res),
+          }),
+      mainParameters
+      );
+
+      parameters.index = widgets.targettedIndex;
+
+      return parameters;
+    });
+
+    return {mainParameters, derivatedParameters};
   }
 
   function search() {
-    const widgetSearchParameters = getSearchParameters(helper.state);
+    const {mainParameters, derivatedParameters} = getSearchParameters(helper.state);
 
-    helper.setState(widgetSearchParameters)
-          .search();
+    helper.setState(mainParameters);
+    derivatedParameters.forEach(derivatedSearchParameters => {
+      const index = derivatedSearchParameters.index;
+      let derivedHelper = derivedHelpers[index];
+
+      if (derivedHelpers[index]) {
+        derivedHelpers[index].detach();
+      }
+
+      derivedHelper = helper.derive(sp => new SearchParameters({
+        ...sp,
+        ...derivatedSearchParameters,
+      }));
+      derivedHelper.on('result', handleSearchSuccess);
+      derivedHelper.on('error', handleSearchError);
+      derivedHelpers[index] = derivedHelper;
+    });
+
+    helper.search();
   }
 
   function handleSearchSuccess(content) {
+    const state = store.getState();
+    const results = state.results ? state.results : [];
+    results[content.index] = content;
     const nextState = omit({
       ...store.getState(),
-      results: content,
+      results,
       searching: false,
     }, 'resultsFacetValues');
     store.setState(nextState);

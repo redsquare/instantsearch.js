@@ -41,10 +41,13 @@ export default createConnector({
   displayName: 'AlgoliaPagination',
 
   getProvidedProps(props, searchState, searchResults) {
-    if (!searchResults.results) {
+    const index = this.context.multiIndexContext ? this.context.multiIndexContext.targettedIndex : this.context.ais.mainTargettedIndex;
+
+    if (!searchResults.results || !searchResults.results[index]) {
       return null;
     }
-    const nbPages = searchResults.results.nbPages;
+
+    const nbPages = searchResults.results[index].nbPages;
     return {
       nbPages,
       currentRefinement: getCurrentRefinement(props, searchState),

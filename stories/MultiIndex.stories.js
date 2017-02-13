@@ -5,37 +5,32 @@ import {connectHits, connectMultiHits} from '../packages/react-instantsearch/con
 import {WrapWithHits} from './util';
 import Autosuggest from 'react-autosuggest';
 
-const stories = storiesOf('Configure', module);
+const stories = storiesOf('MultiIndex', module);
 
-stories.add('default', () =>
-    <ConfigureExample/>
-);
+stories.add('MultiHits', () =>
+  <WrapWithHits>
+    <Configure hitsPerPage={5}/>
+    <MultiIndexContext indexName="bestbuy">
+      <Configure hitsPerPage={2}/>
+      <CustomHits />
+    </MultiIndexContext>
+    <MultiIndexContext indexName="airbnb">
+      <Configure hitsPerPage={4} />
+      <CustomHits />
+    </MultiIndexContext>
+  </WrapWithHits>
+).add('AutoComplete', () =>
+  <WrapWithHits>
+    <AutoComplete />
+    <MultiIndexContext indexName="bestbuy">
+      <VirtualAutoComplete />
+    </MultiIndexContext>
+    <MultiIndexContext indexName="airbnb">
+      <VirtualAutoComplete />
+    </MultiIndexContext>
+  </WrapWithHits >);
 
-class ConfigureExample extends React.Component {
-  constructor() {
-    super();
-    this.state = {hitsPerPage: 3};
-  }
-  onClick() {
-    const hitsPerPage = this.state.hitsPerPage === 3 ? 1 : 3;
-    this.setState({hitsPerPage});
-  }
-  render() {
-    return <WrapWithHits>
-      <AutoComplete/>
-      <Configure hitsPerPage={this.state.hitsPerPage} highlightPreTag="em"/>
-      <button onClick={this.onClick.bind(this)}>Toggle HitsPerPage</button>
-      <MultiIndexContext indexName="bestbuy">
-        <div> <Configure hitsPerPage={2} highlightPreTag="vv"/>
-          <CustomHits /> </div>
-      </MultiIndexContext>
-      <MultiIndexContext indexName="airbnb">
-        <div><Configure hitsPerPage={4} />
-          <CustomHits /></div>
-      </MultiIndexContext>
-    </WrapWithHits>;
-  }
-}
+const VirtualAutoComplete = connectMultiHits(() => null);
 
 const AutoComplete = connectMultiHits(({hits, query, refine}) => <Autosuggest
   suggestions={hits}
