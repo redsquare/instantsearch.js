@@ -88,10 +88,12 @@ export default createConnector({
     const {results} = searchResults;
     const {attributeName, showMore, limitMin, limitMax} = props;
     const limit = showMore ? limitMax : limitMin;
+    const index = this.context.multiIndexContext ? this.context.multiIndexContext.targettedIndex : this.context.ais.mainTargettedIndex;
 
     const canRefine =
       Boolean(results) &&
-      Boolean(results.getFacetByName(attributeName));
+      Boolean(results[index]) &&
+      Boolean(results[index].getFacetByName(attributeName));
 
     const isFromSearch = Boolean(searchForFacetValuesResults
       && searchForFacetValuesResults[attributeName]
@@ -122,7 +124,7 @@ export default createConnector({
           count: v.count,
           isRefined: v.isRefined,
         }))
-      : results
+      : results[index]
         .getFacetValues(attributeName, {sortBy})
         .map(v => ({
           label: v.name,

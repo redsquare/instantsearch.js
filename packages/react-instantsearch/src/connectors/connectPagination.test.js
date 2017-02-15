@@ -6,7 +6,6 @@ import connect from './connectPagination';
 jest.mock('../core/createConnector');
 
 const {
-  getProvidedProps,
   refine,
   getSearchParameters: getSP,
   transitionState,
@@ -14,22 +13,25 @@ const {
   cleanUp,
 } = connect;
 
+const context = {context: {multiIndexContext: {targettedIndex: 'index'}}};
+const getProvidedProps = connect.getProvidedProps.bind(context);
+
 let props;
 let params;
 let searchState;
 
 describe('connectPagination', () => {
   it('provides the correct props to the component', () => {
-    props = getProvidedProps({}, {}, {results: {nbPages: 666}});
+    props = getProvidedProps({}, {}, {results: {index: {nbPages: 666}}});
     expect(props).toEqual({currentRefinement: 1, nbPages: 666, canRefine: true});
 
-    props = getProvidedProps({}, {page: 5}, {results: {nbPages: 666}});
+    props = getProvidedProps({}, {page: 5}, {results: {index: {nbPages: 666}}});
     expect(props).toEqual({currentRefinement: 5, nbPages: 666, canRefine: true});
 
-    props = getProvidedProps({}, {page: '5'}, {results: {nbPages: 666}});
+    props = getProvidedProps({}, {page: '5'}, {results: {index: {nbPages: 666}}});
     expect(props).toEqual({currentRefinement: 5, nbPages: 666, canRefine: true});
 
-    props = getProvidedProps({}, {page: '1'}, {results: {nbPages: 1}});
+    props = getProvidedProps({}, {page: '1'}, {results: {index: {nbPages: 1}}});
     expect(props).toEqual({currentRefinement: 1, nbPages: 1, canRefine: false});
   });
 

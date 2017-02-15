@@ -89,19 +89,20 @@ export default createConnector({
   getProvidedProps(props, searchState, searchResults) {
     const attributeName = props.attributeName;
     const currentRefinement = getCurrentRefinement(props, searchState);
+    const index = this.context.multiIndexContext ? this.context.multiIndexContext.targettedIndex : this.context.ais.mainTargettedIndex;
     const items = props.items.map(item => {
       const value = stringifyItem(item);
       return {
         label: item.label,
         value,
         isRefined: value === currentRefinement,
-        noRefinement: searchResults && searchResults.results ?
-         itemHasRefinement(getId(props), searchResults.results, value) : false,
+        noRefinement: searchResults.results && searchResults.results[index] ?
+         itemHasRefinement(getId(props), searchResults.results[index], value) : false,
       };
     });
 
-    const stats = searchResults.results && searchResults.results.getFacetByName(attributeName) ?
-      searchResults.results.getFacetStats(attributeName) : null;
+    const stats = searchResults.results && searchResults.results[index] && searchResults.results[index].getFacetByName(attributeName) ?
+      searchResults.results[index].getFacetStats(attributeName) : null;
     const refinedItem = find(items, item => item.isRefined === true);
     if (!items.some(item => item.value === '')) {
       items.push({

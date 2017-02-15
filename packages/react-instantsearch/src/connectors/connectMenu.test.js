@@ -7,7 +7,6 @@ import connect from './connectMenu';
 jest.mock('../core/createConnector');
 
 const {
-  getProvidedProps,
   refine,
   getSearchParameters: getSP,
   getMetadata,
@@ -15,15 +14,18 @@ const {
   cleanUp,
 } = connect;
 
+const context = {context: {multiIndexContext: {targettedIndex: 'index'}}};
+const getProvidedProps = connect.getProvidedProps.bind(context);
+
 let props;
 let params;
 
 describe('connectMenu', () => {
   it('provides the correct props to the component', () => {
-    const results = {
+    const results = {index: {
       getFacetValues: jest.fn(() => []),
       getFacetByName: () => true,
-    };
+    }};
 
     props = getProvidedProps({attributeName: 'ok'}, {}, {});
     expect(props).toEqual({items: [], currentRefinement: null, isFromSearch: false,
@@ -45,8 +47,8 @@ describe('connectMenu', () => {
     expect(props).toEqual({items: [], currentRefinement: null, isFromSearch: false,
       canRefine: false, searchForItems: undefined});
 
-    results.getFacetValues.mockClear();
-    results.getFacetValues.mockImplementation(() => [
+    results.index.getFacetValues.mockClear();
+    results.index.getFacetValues.mockImplementation(() => [
       {
         name: 'wat',
         isRefined: true,
@@ -148,11 +150,11 @@ describe('connectMenu', () => {
   });
 
   it('if an item is equal to the currentRefinement, its value should be an empty string', () => {
-    const results = {
+    const results = {index: {
       getFacetValues: jest.fn(() => []),
       getFacetByName: () => true,
-    };
-    results.getFacetValues.mockImplementation(() => [
+    }};
+    results.index.getFacetValues.mockImplementation(() => [
       {
         name: 'wat',
         isRefined: true,
@@ -266,12 +268,12 @@ describe('connectMenu', () => {
   });
 
   it('when search for facets values is activated order the item by isRefined first', () => {
-    const results = {
+    const results = {index: {
       getFacetValues: jest.fn(() => []),
       getFacetByName: () => true,
-    };
-    results.getFacetValues.mockClear();
-    results.getFacetValues.mockImplementation(() => [
+    }};
+    results.index.getFacetValues.mockClear();
+    results.index.getFacetValues.mockImplementation(() => [
       {
         name: 'wat',
         isRefined: false,
@@ -284,7 +286,7 @@ describe('connectMenu', () => {
       },
     ]);
 
-    props = connect.getProvidedProps({attributeName: 'ok', withSearchBox: true}, {}, {results});
+    props = getProvidedProps({attributeName: 'ok', withSearchBox: true}, {}, {results});
 
     expect(props.items).toEqual([
       {
@@ -302,7 +304,7 @@ describe('connectMenu', () => {
     ]);
 
     // searchForFacetValues is @deprecated. This test should be removed when searchForFacetValues is removed
-    props = connect.getProvidedProps({attributeName: 'ok', searchForFacetValues: true}, {}, {results});
+    props = getProvidedProps({attributeName: 'ok', searchForFacetValues: true}, {}, {results});
 
     expect(props.items).toEqual([
       {

@@ -9,13 +9,13 @@ const stories = storiesOf('MultiIndex', module);
 
 stories.add('MultiHits', () =>
   <WrapWithHits>
-    <Configure hitsPerPage={5}/>
+    <Configure hitsPerPage={1}/>
     <MultiIndexContext indexName="bestbuy">
-      <Configure hitsPerPage={2}/>
+      <Configure hitsPerPage={1}/>
       <CustomHits />
     </MultiIndexContext>
     <MultiIndexContext indexName="airbnb">
-      <Configure hitsPerPage={4} />
+      <Configure hitsPerPage={1} />
       <CustomHits />
     </MultiIndexContext>
   </WrapWithHits>
@@ -55,25 +55,26 @@ const AutoComplete = connectMultiHits(({hits, query, refine}) => <Autosuggest
 
 const CustomHits = connectHits(({hits}) =>
   <div className="hits">
-    {hits.map((hit, idx) =>
-      <div key={idx} className="hit">
-        <div>
-          <div className="hit-picture"><img src={`${hit.image}`} /></div>
-        </div>
-        <div className="hit-content">
+    {hits.map((hit, idx) => {
+      const image = hit.image ? hit.image : hit.picture_url;
+      return <div key={idx} className="hit">
           <div>
-            <Highlight attributeName="name" hit={hit} />
-            <span> - ${hit.price}</span>
-            <span> - {hit.rating} stars</span>
+            <div className="hit-picture"><img src={`${image}`} /></div>
           </div>
-          <div className="hit-type">
-            <Highlight attributeName="type" hit={hit} />
+          <div className="hit-content">
+            <div>
+              <Highlight attributeName="name" hit={hit} />
+              <span> - ${hit.price}</span>
+              <span> - {hit.rating} stars</span>
+            </div>
+            <div className="hit-type">
+              <Highlight attributeName="type" hit={hit} />
+            </div>
+            <div className="hit-description">
+              <Highlight attributeName="description" hit={hit} />
+            </div>
           </div>
-          <div className="hit-description">
-            <Highlight attributeName="description" hit={hit} />
-          </div>
-        </div>
-      </div>
+        </div>;
+    }
     )}
-  </div>
-);
+  </div>);

@@ -6,23 +6,25 @@ import {SearchParameters} from 'algoliasearch-helper';
 import connect from './connectRefinementList';
 jest.mock('../core/createConnector');
 
+const context = {context: {multiIndexContext: {targettedIndex: 'index'}}};
+
 const {
-  getProvidedProps,
   refine,
   getSearchParameters: getSP,
   getMetadata,
   searchForFacetValues,
   cleanUp,
 } = connect;
+const getProvidedProps = connect.getProvidedProps.bind(context);
 
 let props;
 let params;
 
 describe('connectRefinementList', () => {
-  const results = {
+  const results = {index: {
     getFacetValues: jest.fn(() => []),
     getFacetByName: () => true,
-  };
+  }};
 
   it('provides the correct props to the component', () => {
     props = getProvidedProps({attributeName: 'ok'}, {}, {results});
@@ -50,8 +52,8 @@ describe('connectRefinementList', () => {
     expect(props).toEqual({items: [], currentRefinement: [], isFromSearch: false,
       canRefine: false, withSearchBox: true});
 
-    results.getFacetValues.mockClear();
-    results.getFacetValues.mockImplementation(() => [
+    results.index.getFacetValues.mockClear();
+    results.index.getFacetValues.mockImplementation(() => [
       {
         name: 'wat',
         isRefined: true,

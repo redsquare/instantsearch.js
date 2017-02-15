@@ -6,32 +6,34 @@ import connect from './connectHierarchicalMenu';
 jest.mock('../core/createConnector');
 
 const {
-  getProvidedProps,
   refine,
   getSearchParameters: getSP,
   getMetadata,
   cleanUp,
 } = connect;
 
+const context = {context: {multiIndexContext: {targettedIndex: 'index'}}};
+const getProvidedProps = connect.getProvidedProps.bind(context);
+
 let props;
 let params;
 
 describe('connectHierarchicalMenu', () => {
   it('provides the correct props to the component', () => {
-    const results = {
+    const results = {index: {
       getFacetValues: jest.fn(),
       getFacetByName: () => true,
-    };
+    }};
 
-    results.getFacetValues.mockImplementationOnce(() => ({}));
+    results.index.getFacetValues.mockImplementationOnce(() => ({}));
     props = getProvidedProps({attributes: ['ok']}, {hierarchicalMenu: {ok: 'wat'}}, {results});
     expect(props).toEqual({canRefine: false, currentRefinement: 'wat', items: []});
 
     props = getProvidedProps({attributes: ['ok']}, {}, {});
     expect(props).toEqual({canRefine: false, currentRefinement: null, items: []});
 
-    results.getFacetValues.mockClear();
-    results.getFacetValues.mockImplementation(() => ({
+    results.index.getFacetValues.mockClear();
+    results.index.getFacetValues.mockImplementation(() => ({
       data: [
         {
           name: 'wat',

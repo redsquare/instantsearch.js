@@ -30,6 +30,7 @@ export default function createInstantSearchManager({
   helper.on('error', handleSearchError);
 
   const derivedHelpers = {};
+  let indexMapping = {};
 
   let initialSearchParameters = helper.state;
 
@@ -55,6 +56,7 @@ export default function createInstantSearchManager({
   }
 
   function getSearchParameters() {
+    indexMapping = {};
     const mainParameters = widgetsManager.getWidgets()
       .filter(widget => Boolean(widget.getSearchParameters))
       .filter(widget => !widget.multiIndexContext || widget.multiIndexContext.targettedIndex === indexName)
@@ -62,6 +64,8 @@ export default function createInstantSearchManager({
         (res, widget) => widget.getSearchParameters(res),
         initialSearchParameters
       );
+
+    indexMapping[mainParameters.index] = indexName;
 
     const derivatedWidgets = widgetsManager.getWidgets()
       .filter(widget => Boolean(widget.getSearchParameters))
@@ -82,13 +86,14 @@ export default function createInstantSearchManager({
       const parameters = widgets.widgets.reduce(
         (res, widget) =>
           new SearchParameters({
-            ...mainParameters,
+            ...res,
             ...widget.getSearchParameters(res),
           }),
-      mainParameters
+        new SearchParameters(
+          {...mainParameters, index: widgets.targettedIndex}
+        )
       );
-
-      parameters.index = widgets.targettedIndex;
+      indexMapping[parameters.index] = widgets.targettedIndex;
 
       return parameters;
     });
@@ -123,7 +128,7 @@ export default function createInstantSearchManager({
   function handleSearchSuccess(content) {
     const state = store.getState();
     const results = state.results ? state.results : [];
-    results[content.index] = content;
+    results[indexMapping[content.index]] = content;
     const nextState = omit({
       ...store.getState(),
       results,

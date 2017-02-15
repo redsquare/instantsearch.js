@@ -124,10 +124,12 @@ export default createConnector({
     const {showMore, limitMin, limitMax} = props;
     const id = getId(props);
     const {results} = searchResults;
+    const index = this.context.multiIndexContext ? this.context.multiIndexContext.targettedIndex : this.context.ais.mainTargettedIndex;
 
     const isFacetPresent =
       Boolean(results) &&
-      Boolean(results.getFacetByName(id));
+      Boolean(results[index]) &&
+      Boolean(results[index].getFacetByName(id));
 
     if (!isFacetPresent) {
       return {
@@ -138,7 +140,7 @@ export default createConnector({
     }
 
     const limit = showMore ? limitMax : limitMin;
-    const value = results.getFacetValues(id, {sortBy});
+    const value = results[index].getFacetValues(id, {sortBy});
     const items = value.data ? transformValue(value.data, limit, props, searchState) : [];
 
     return {
